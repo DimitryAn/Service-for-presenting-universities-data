@@ -10,5 +10,5 @@
 ### Из терминала
 
 ```
-python -m offline_scripts.create_db
+python -m offline_scripts.clean_data
 ```
