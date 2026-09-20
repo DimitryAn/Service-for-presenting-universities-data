@@ -1,0 +1,15 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.git/
+.gitignore
+.env
+.streamlit/secrets.toml
+*.log
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+Dockerfile
+docker-compose.yml
+README.md
