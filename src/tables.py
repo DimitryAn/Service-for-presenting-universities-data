@@ -1,4 +1,5 @@
 import streamlit as st
+from src.db import read_table
 
 TABLES = {
     "Информация НИР по грантам": "gr_pr",
@@ -16,3 +17,6 @@ def show_tables_page():
                 st.session_state.selected_table = t
                 st.session_state.page = "tables"
                 st.rerun()
+
+def show_table(tbl):
+    st.dataframe(read_table(TABLES[tbl]), width="stretch")
