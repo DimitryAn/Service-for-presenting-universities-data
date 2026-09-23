@@ -1,5 +1,5 @@
 import streamlit as st
-from src.tables import show_tables_page
+from src.tables import show_tables_page, show_table
 from src.analysis import show_analysis_page
 from src.exit import show_exit_page
 from src.help import show_help_page
@@ -42,7 +42,7 @@ elif current_page == "tables":
     tbl = st.session_state.selected_table
     if tbl:
         st.header(f"Таблица: {tbl}")
-        st.write("Здесь будет таблица из БД.")
+        show_table(tbl)
     else:
         st.header("Таблицы")
         st.info("Выберите таблицу в меню сверху.")
