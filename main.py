@@ -3,6 +3,7 @@ from src.tables import show_tables_page, show_table
 from src.analysis import show_analysis_page
 from src.exit import show_exit_page
 from src.help import show_help_page
+from src.menu import show_menu
 
 st.set_page_config(page_title="University Viewer", layout="wide")
 
@@ -11,19 +12,22 @@ if "page" not in st.session_state:
 if "selected_table" not in st.session_state:
     st.session_state.selected_table = None
 
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3, col4, col5 = st.columns(5)
 
 with col1:
-    show_analysis_page()
-
+    show_menu()
+    
 with col2:
     show_tables_page()
-                
+    
 with col3:
-    show_exit_page()
-
+    show_analysis_page()
+              
 with col4:
     show_help_page()
+
+with col5:
+    show_exit_page()
         
 st.write("---")
 
