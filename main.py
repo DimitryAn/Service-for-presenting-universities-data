@@ -4,13 +4,24 @@ from src.analysis import show_analysis_page
 from src.exit import show_exit_page
 from src.help import show_help_page
 from src.menu import show_menu
+from src.auth import auth
 
 st.set_page_config(page_title="University Viewer", layout="wide")
 
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
 if "page" not in st.session_state:
     st.session_state.page = "home"
 if "selected_table" not in st.session_state:
     st.session_state.selected_table = None
+
+if not st.session_state.logged_in:
+    is_logged = auth()
+    if is_logged:
+        st.session_state.logged_in = True
+        st.rerun()
+    else:
+        st.stop()
 
 col1, col2, col3, col4, col5 = st.columns(5)
 
@@ -56,5 +67,7 @@ elif current_page == "help":
     st.write("Инструкция по использованию сервиса.")
 
 elif current_page == "exit":
-    st.header("До свидания")
-    #st.stop()
+    st.session_state.logged_in = False
+    st.session_state.page = "home"
+    st.session_state.selected_table = None
+    st.rerun()
