@@ -19,4 +19,4 @@ def show_tables_page():
                 st.rerun()
 
 def show_table(tbl):
-    st.dataframe(read_table(TABLES[tbl]), width="stretch")
+    st.dataframe(read_table(TABLES[tbl]),use_container_width=True, height=700)
