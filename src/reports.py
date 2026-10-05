@@ -94,4 +94,4 @@ def show_report(group):
         st.rerun()
     where, values = geo_where()
     query = f"WITH nir AS ({NIR}) " + reports[choice].format(where=where, order=sort_order(KEYS[choice]))
-    st.dataframe(read_query(query, values), width="stretch", height=700)
+    st.dataframe(read_query(query, values), width="stretch", height=700, hide_index=True)

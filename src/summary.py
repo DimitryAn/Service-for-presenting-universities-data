@@ -28,4 +28,4 @@ def show_summary():
     codes = selected_codes()
     if codes is not None:
         df = df[df["Код вуза"].isin(codes)]
-    st.dataframe(df, width="stretch", height=700)
+    st.dataframe(df, width="stretch", height=700, hide_index=True)
