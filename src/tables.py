@@ -1,5 +1,7 @@
 import streamlit as st
 from src.db import read_table
+from src.geo import selected_codes
+from src.sort import sort_order
 
 TABLES = {
     "Информация НИР по грантам": "gr_pr",
@@ -7,6 +9,14 @@ TABLES = {
     "Информация НИР по темпланам": "tp_pr",
     "ВУЗы": "vuz",
     "Рубрики ГРНТИ": "grntirub",
+}
+
+KEYS = {
+    "gr_pr": ["Код конкурса", "Код НИР"],
+    "ntp_pr": ["Код НТП", "Код НИР"],
+    "tp_pr": ["Код вуза", "Код НИР"],
+    "vuz": ["Код вуза"],
+    "grntirub": ["Код рубрики"],
 }
 
 def show_tables_page():
@@ -19,4 +29,9 @@ def show_tables_page():
                 st.rerun()
 
 def show_table(tbl):
-    st.dataframe(read_table(TABLES[tbl]),use_container_width=True, height=700)
+    table = TABLES[tbl]
+    df = read_table(table, sort_order(KEYS[table]))
+    codes = selected_codes()
+    if codes is not None and table != "grntirub":
+        df = df[df["Код вуза"].isin(codes)]
+    st.dataframe(df, width="stretch", height=700, hide_index=True)

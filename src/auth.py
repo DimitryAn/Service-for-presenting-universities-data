@@ -12,7 +12,7 @@ def auth() -> bool:
 
     col1, col2, col3 = st.columns([DUMMY_LEFT_SPACE_WIDTH,LOGIN_FROM_WIDTH,DUMMY_RIGHT_SPACE_WIDTH])
     with col2:
-        st.title("Вход в систему")
+        st.markdown("###### Вход в систему")
         with st.form("login_form",width="content"):
             login = st.text_input(label="Введите логин",type="default")    
             password = st.text_input(label="Введите пароль",type="password")  
