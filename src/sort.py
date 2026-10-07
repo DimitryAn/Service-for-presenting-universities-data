@@ -3,8 +3,7 @@ import streamlit as st
 SORTS = ["Без сортировки", "По возрастанию", "По убыванию"]
 
 def show_sort_page():
-    with st.popover("Сортировка", width="stretch"):
-        st.caption("Сортировка по ключу:")
+    with st.popover("Сортировка по ключу", width="stretch"):
         choice = st.radio("Порядок", SORTS, index=SORTS.index(st.session_state.sort))
         if choice != st.session_state.sort:
             st.session_state.sort = choice
