@@ -1,7 +1,7 @@
-import streamlit as st
 from src.db import read_query
-from src.geo import geo_where
+from src.filters import filters_where, grnti_like
 from src.sort import sort_order
+from src.view import show_dataframe
 
 NIR = """
 SELECT 'Гранты' AS "Форма финансирования",
@@ -20,78 +20,103 @@ SELECT 'Темпланы',
 FROM tp_pr tp JOIN vuz v ON v."Код вуза" = tp."Код вуза"
 """
 
+# итоги по всем формам финансирования сразу
+TOTALS = """COUNT(*) AS "Количество НИР",
+               SUM("Финансирование") AS "Сумма финансирования\""""
+
+# количество и финансирование по каждой форме отдельно
+FORMS = """SUM("Форма финансирования" = 'Гранты') AS "НИР по грантам",
+               SUM(CASE WHEN "Форма финансирования" = 'Гранты' THEN "Финансирование" ELSE 0 END) AS "Финансирование по грантам",
+               SUM("Форма финансирования" = 'НТП') AS "НИР по НТП",
+               SUM(CASE WHEN "Форма финансирования" = 'НТП' THEN "Финансирование" ELSE 0 END) AS "Финансирование по НТП",
+               SUM("Форма финансирования" = 'Темпланы') AS "НИР по темпланам",
+               SUM(CASE WHEN "Форма финансирования" = 'Темпланы' THEN "Финансирование" ELSE 0 END) AS "Финансирование по темпланам\""""
+
+# сколько нир по рубрике в каждой форме финансирования
+NUMBERS = """SUM("Форма финансирования" = 'Гранты') AS "НИР по грантам",
+               SUM("Форма финансирования" = 'НТП') AS "НИР по НТП",
+               SUM("Форма финансирования" = 'Темпланы') AS "НИР по темпланам\""""
+
+# коды в одной ячейке разделены по-разному, приводим разделители к запятой
+CODES = """',' || REPLACE(REPLACE(REPLACE(nir."Код ГРНТИ", ';', ','), ':', ','), ' ', ',')"""
+
+REPORTS = {
+    "По субъектам федерации": """
+        SELECT "Субъект федерации",
+               {totals},
+               {forms}
+        FROM nir
+        {where}
+        GROUP BY "Субъект федерации"
+        {order}
+    """,
+    "По городам": """
+        SELECT "Субъект федерации", "Город",
+               {totals},
+               {forms}
+        FROM nir
+        {where}
+        GROUP BY "Субъект федерации", "Город"
+        {order}
+    """,
+    "По формам финансирования": """
+        SELECT "Форма финансирования",
+               {totals}
+        FROM nir
+        {where}
+        GROUP BY "Форма финансирования"
+        {order}
+    """,
+    "По руководителям": """
+        SELECT "Руководитель НИР", "Вуз",
+               {totals},
+               {forms}
+        FROM nir
+        {where}
+        GROUP BY "Руководитель НИР", "Вуз"
+        HAVING COUNT(*) > 1
+        {order}
+    """,
+    "По рубрикам ГРНТИ": """
+        SELECT r."Код рубрики", r."Наименование рубрики",
+               {numbers}
+        FROM grntirub r JOIN nir
+             -- нир попадает в рубрику, если с ее номера начинается код, подходящий
+             -- под фильтр; даже если таких кодов два, рубрика получит одну строку
+             ON r."Код рубрики" LIKE '{rubric}'
+                AND {codes} LIKE '%,' || r."Код рубрики" || '{tail}'
+        {where}
+        GROUP BY r."Код рубрики", r."Наименование рубрики"
+        {order}
+    """,
+}
+
+# в меню отчеты разделены на две части
 GROUPS = {
-    "Отчеты по сводным показателям": {
-        "По субъектам федерации": """
-            SELECT "Субъект федерации",
-                   COUNT(*) AS "Количество НИР",
-                   SUM("Финансирование") AS "Сумма финансирования"
-            FROM nir
-            {where}
-            GROUP BY "Субъект федерации"
-            {order}
-        """,
-        "По городам": """
-            SELECT "Субъект федерации", "Город",
-                   COUNT(*) AS "Количество НИР",
-                   SUM("Финансирование") AS "Сумма финансирования"
-            FROM nir
-            {where}
-            GROUP BY "Субъект федерации", "Город"
-            {order}
-        """,
-        "По формам финансирования": """
-            SELECT "Форма финансирования",
-                   COUNT(*) AS "Количество НИР",
-                   SUM("Финансирование") AS "Сумма финансирования"
-            FROM nir
-            {where}
-            GROUP BY "Форма финансирования"
-            {order}
-        """,
-    },
-    "Отчеты по базам НИР": {
-        "Руководители с несколькими НИР": """
-            SELECT "Руководитель НИР",
-                   COUNT(*) AS "Количество НИР",
-                   SUM("Финансирование") AS "Сумма финансирования"
-            FROM nir
-            {where}
-            GROUP BY "Руководитель НИР"
-            HAVING COUNT(*) > 1 AND "Руководитель НИР" IS NOT NULL
-            {order}
-        """,
-        "Распределение НИР по рубрикам ГРНТИ": """
-            SELECT SUBSTR(nir."Код ГРНТИ", 1, 2) AS "Код рубрики",
-                   r."Наименование рубрики",
-                   COUNT(*) AS "Количество НИР",
-                   SUM("Финансирование") AS "Сумма финансирования"
-            FROM nir LEFT JOIN grntirub r ON r."Код рубрики" = SUBSTR(nir."Код ГРНТИ", 1, 2)
-            {where}
-            GROUP BY "Код рубрики", "Наименование рубрики"
-            HAVING "Код рубрики" IS NOT NULL
-            {order}
-        """,
-    },
+    "Отчеты по сводным показателям": ["По субъектам федерации", "По городам", "По формам финансирования"],
+    "Отчеты по базам НИР": ["По руководителям", "По рубрикам ГРНТИ"],
 }
 
 KEYS = {
     "По субъектам федерации": ["Субъект федерации"],
     "По городам": ["Субъект федерации", "Город"],
     "По формам финансирования": ["Форма финансирования"],
-    "Руководители с несколькими НИР": ["Руководитель НИР"],
-    "Распределение НИР по рубрикам ГРНТИ": ["Код рубрики"],
+    "По руководителям": ["Руководитель НИР", "Вуз"],
+    "По рубрикам ГРНТИ": ["Код рубрики"],
 }
 
-def show_report(group):
-    reports = GROUPS[group]
-    names = list(reports)
-    if st.session_state.report not in names:
-        st.session_state.report = names[0]
-    choice = st.radio("Отчет", names, index=names.index(st.session_state.report), horizontal=True)
-    if choice != st.session_state.report:
-        st.session_state.report = choice
-        st.rerun()
-    where, values = geo_where()
-    query = f"WITH nir AS ({NIR}) " + reports[choice].format(where=where, order=sort_order(KEYS[choice]))
-    st.dataframe(read_query(query, values), width="stretch", height=700, hide_index=True)
+def add_total(df):
+    # итоги считаются по тому, что осталось после фильтров
+    total = df.sum(numeric_only=True)
+    df.loc[len(df)] = {column: total.get(column, "") for column in df.columns}
+    df.iloc[-1, 0] = "Итого"
+    return df
+
+def show_report(choice):
+    where, values = filters_where()
+    rubric, tail = grnti_like()
+    query = f"WITH nir AS ({NIR}) " + REPORTS[choice].format(
+        totals=TOTALS, forms=FORMS, numbers=NUMBERS, codes=CODES, rubric=rubric, tail=tail,
+        where=where, order=sort_order(KEYS[choice]))
+    df = add_total(read_query(query, values))
+    show_dataframe(df, choice)

@@ -1,0 +1,48 @@
+.block-container {
+    padding-top: 0rem !important;
+    padding-bottom: 0.5rem !important;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+section[data-testid="stMain"] {
+    overflow: hidden;
+}
+header[data-testid="stHeader"] {
+    display: none;
+}
+[data-testid="stSelectbox"] .react-aria-ComboBox > div {
+    background-color: white;
+    border: 1px solid rgba(49, 51, 63, 0.4);
+}
+[data-testid="stSelectbox"] input {
+    color: black;
+}
+/* раскрытый список шире кнопки, чтобы названия помещались целиком */
+div[style*="--trigger-width"] {
+    width: 320px !important;
+}
+[role="listbox"] [role="option"] {
+    white-space: nowrap;
+}
+/* выпадайка фильтра по ширине списков, а не по ширине полей внутри */
+[data-testid="stPopoverBody"] {
+    max-width: 320px !important;
+}
+/* точки между полями кода ГРНТИ стоят на нижней линии цифр */
+[data-testid="stPopoverBody"] h6 {
+    margin-top: 0.6rem;
+}
+/* узкие таблицы стоят по центру экрана */
+[data-testid="stElementContainer"]:has([data-testid="stDataFrame"]) {
+    margin-left: auto;
+    margin-right: auto;
+}
+[data-testid="stPopover"] button,
+[data-testid="stButton"] button {
+    border-color: rgba(49, 51, 63, 0.4);
+}
+[data-testid="stPopover"] button p,
+[data-testid="stButton"] button p {
+    color: black;
+}
