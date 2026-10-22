@@ -6,7 +6,8 @@ SORTS = ["Без сортировки", "По возрастанию", "По у�
 def show_sort_page():
     with st.popover("Сортировка по ключу", width="stretch", key=menu_key("sort_menu")):
         for sort in SORTS:
-            if st.button(sort, width="stretch", disabled=sort == st.session_state.sort):
+            # по уже выбранной кнопке тоже можно щелкнуть, чтобы просто закрыть выпадайку
+            if st.button(sort, width="stretch"):
                 st.session_state.sort = sort
                 close_menu("sort_menu")
 

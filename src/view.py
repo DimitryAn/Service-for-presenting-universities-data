@@ -2,6 +2,7 @@ import io
 import streamlit as st
 from docx import Document
 from src.filters import filters_name
+from src.menu import menu_key, close_menu
 
 # длинные названия рубрик не должны обрезаться
 COLUMNS = {"Наименование рубрики": st.column_config.TextColumn(width=500)}
@@ -39,9 +40,10 @@ def show_save_page(df, name):
         ("HTML", html_file(df), ".html"),
         ("Word", word_file(df), ".docx"),
     ]
-    with st.popover("Сохранить", width="stretch"):
+    with st.popover("Сохранить", width="stretch", key=menu_key("save_menu")):
         for label, data, suffix in files:
-            st.download_button(label, data, name + suffix, width="stretch")
+            if st.download_button(label, data, name + suffix, width="stretch"):
+                close_menu("save_menu")
 
 def show_dataframe(df, name, title=""):
     # заголовок и кнопка сохранения стоят в одной строке
