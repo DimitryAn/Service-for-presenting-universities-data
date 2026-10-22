@@ -1,7 +1,9 @@
 import streamlit as st
 from src.db import read_table
-from src.geo import selected_codes
+from src.filters import filter_table
+from src.menu import menu_key, close_menu
 from src.sort import sort_order
+from src.view import show_dataframe
 
 TABLES = {
     "Информация НИР по грантам": "gr_pr",
@@ -10,6 +12,8 @@ TABLES = {
     "ВУЗы": "vuz",
     "Рубрики ГРНТИ": "grntirub",
 }
+
+SUMMARY = "Сводные показатели"
 
 KEYS = {
     "gr_pr": ["Код конкурса", "Код НИР"],
@@ -20,18 +24,18 @@ KEYS = {
 }
 
 def show_tables_page():
-    with st.popover("Таблицы", width="stretch"):
-        st.caption("Выберите таблицу:")
-        for t in TABLES:
-            if st.button(t, key=f"tbl_{t}", width="stretch"):
-                st.session_state.selected_table = t
+    with st.popover("Таблицы", width="stretch", key=menu_key("tables_menu")):
+        for tbl in TABLES:
+            if st.button(tbl, width="stretch"):
+                st.session_state.selected_table = tbl
                 st.session_state.page = "tables"
-                st.rerun()
+                close_menu("tables_menu")
+        st.divider()
+        if st.button(SUMMARY, width="stretch"):
+            st.session_state.page = "summary"
+            close_menu("tables_menu")
 
 def show_table(tbl):
     table = TABLES[tbl]
-    df = read_table(table, sort_order(KEYS[table]))
-    codes = selected_codes()
-    if codes is not None and table != "grntirub":
-        df = df[df["Код вуза"].isin(codes)]
-    st.dataframe(df, width="stretch", height=700, hide_index=True)
+    df = filter_table(read_table(table, sort_order(KEYS[table])))
+    show_dataframe(df, tbl, f"Таблица: {tbl}")

@@ -1,7 +1,7 @@
-import streamlit as st
 from src.db import read_query
-from src.geo import selected_codes
+from src.filters import filter_table, grnti_where
 from src.sort import sort_order
+from src.view import show_dataframe
 
 QUERY = """
 SELECT
@@ -15,17 +15,16 @@ SELECT
     COALESCE(tp.summa, 0) AS "Финансирование по темпланам"
 FROM vuz v
 LEFT JOIN (SELECT "Код вуза" AS kod, COUNT(*) AS kol, SUM("Объем гранта") AS summa
-           FROM gr_pr GROUP BY "Код вуза") gr ON gr.kod = v."Код вуза"
+           FROM gr_pr {grnti} GROUP BY "Код вуза") gr ON gr.kod = v."Код вуза"
 LEFT JOIN (SELECT "Код вуза" AS kod, COUNT(*) AS kol, SUM("Объем финансирования") AS summa
-           FROM ntp_pr GROUP BY "Код вуза") ntp ON ntp.kod = v."Код вуза"
+           FROM ntp_pr {grnti} GROUP BY "Код вуза") ntp ON ntp.kod = v."Код вуза"
 LEFT JOIN (SELECT "Код вуза" AS kod, COUNT(*) AS kol, SUM("Объем финансирования") AS summa
-           FROM tp_pr GROUP BY "Код вуза") tp ON tp.kod = v."Код вуза"
+           FROM tp_pr {grnti} GROUP BY "Код вуза") tp ON tp.kod = v."Код вуза"
 WHERE gr.kod IS NOT NULL OR ntp.kod IS NOT NULL OR tp.kod IS NOT NULL
 """
 
 def show_summary():
-    df = read_query(QUERY + sort_order(["Код вуза"]))
-    codes = selected_codes()
-    if codes is not None:
-        df = df[df["Код вуза"].isin(codes)]
-    st.dataframe(df, width="stretch", height=700, hide_index=True)
+    grnti, codes = grnti_where()
+    df = read_query(QUERY.format(grnti=grnti) + sort_order(["Код вуза"]), codes * 3)
+    df = filter_table(df)
+    show_dataframe(df, "Сводные показатели")

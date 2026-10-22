@@ -27,6 +27,15 @@ for table in tables:
         conn.execute(f"""UPDATE {table} SET "{column}" = TRIM("{column}")""")
         conn.execute(f"""UPDATE {table} SET "{column}" = NULL WHERE "{column}" IN ('???', '-')""")
 
+# нир с несуществующим кодом вуза отдаем ближайшему по номеру вузу
+codes = sorted((row[0] for row in conn.execute("""SELECT "Код вуза" FROM vuz""")), key=int)
+for table in ["gr_pr", "ntp_pr", "tp_pr"]:
+    missing = [row[0] for row in conn.execute(f"""SELECT DISTINCT "Код вуза" FROM {table} WHERE "Код вуза" NOT IN (SELECT "Код вуза" FROM vuz)""")]
+    for code in missing:
+        near = min(codes, key=lambda other: abs(int(other) - int(code)))
+        conn.execute(f"""UPDATE {table} SET "Код вуза" = ? WHERE "Код вуза" = ?""", (near, code))
+        print("код", code, "->", near, "в", table)
+
 # заполняем пустые наименования вузов из таблицы vuz по коду вуза
 conn.executescript("""
 UPDATE gr_pr SET "Вуз" = vuz."Вуз" FROM vuz WHERE vuz."Код вуза" = gr_pr."Код вуза";
