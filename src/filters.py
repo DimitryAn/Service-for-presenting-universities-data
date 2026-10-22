@@ -45,7 +45,8 @@ def show_filter_page():
         for level in LEVELS:
             rows = filter_vuz(vuz, LEVELS[:LEVELS.index(level)], chosen)
             options = ["Все"] + sorted(rows[level].dropna().unique())
-            choice = st.selectbox(level, options, index=options.index(chosen[level]))
+            choice = st.selectbox(level, options, index=options.index(chosen[level]),
+                                  placeholder="Выберите опцию")
             if choice != chosen[level]:
                 pick_level(level, choice)
                 st.rerun()
