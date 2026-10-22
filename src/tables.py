@@ -38,4 +38,4 @@ def show_tables_page():
 def show_table(tbl):
     table = TABLES[tbl]
     df = filter_table(read_table(table, sort_order(KEYS[table])))
-    show_dataframe(df, tbl, f"Таблица: {tbl}")
+    show_dataframe(df, tbl, f"Таблица: {tbl}", records=True)

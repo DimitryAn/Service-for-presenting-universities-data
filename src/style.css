@@ -25,9 +25,15 @@ div[style*="--trigger-width"] {
 [role="listbox"] [role="option"] {
     white-space: nowrap;
 }
-/* выпадайка фильтра по ширине списков, а не по ширине полей внутри */
+/* выпадайки меню по ширине списков, а не по ширине полей внутри */
 [data-testid="stPopoverBody"] {
     max-width: 320px !important;
+}
+/* в фильтре два столбца, ему нужно место пошире и отступы поменьше */
+[data-testid="stPopoverBody"]:has([data-testid="stSelectbox"]) {
+    max-width: 660px !important;
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
 }
 /* точки между полями кода ГРНТИ стоят на нижней линии цифр */
 [data-testid="stPopoverBody"] h6 {
