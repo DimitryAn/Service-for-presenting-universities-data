@@ -9,7 +9,7 @@ from src.sort import show_sort_page
 from src.summary import show_summary
 from src.tables import show_tables_page, show_table
 
-st.set_page_config(page_title="University Viewer", layout="wide")
+st.set_page_config(page_title="Анализ сводных показателей выполнения НИР", layout="wide")
 
 START = {"logged_in": False, "page": "home", "sort": "Без сортировки"}
 for key, value in START.items():

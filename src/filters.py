@@ -41,41 +41,47 @@ def show_filter_page():
     chosen = draft()
     vuz = read_table("vuz")
     with st.popover("Фильтр", width="stretch", key=menu_key("filter_menu")):
-        st.caption("Группа вузов:")
-        for level in LEVELS:
-            rows = filter_vuz(vuz, LEVELS[:LEVELS.index(level)], chosen)
-            options = ["Все"] + sorted(rows[level].dropna().unique())
-            choice = st.selectbox(level, options, index=options.index(chosen[level]),
-                                  placeholder="Выберите опцию")
-            if choice != chosen[level]:
-                pick_level(level, choice)
-                st.rerun()
-        st.divider()
-        st.caption("Код ГРНТИ:")
-        columns = st.columns([3, 1, 3, 1, 3])
-        number = st.session_state.get("filter_menu", 0)
-        for index, part in enumerate(PARTS):
-            with columns[index * 2]:
-                # номер тот же, что у выпадайки: после сброса поля создаются заново
-                key = f"{part}_{number}"
-                if key not in st.session_state:
-                    st.session_state[key] = chosen[part]
-                chosen[part] = st.text_input(part, max_chars=2, placeholder="**", key=key,
-                                             label_visibility="collapsed")
-        for index in [1, 3]:
-            with columns[index]:
-                st.markdown("###### .")
-        # код ГРНТИ состоит из чисел, буквы и знаки в нем не нужны
-        wrong = any(not chosen[part].isdigit() for part in PARTS if chosen[part])
-        if wrong:
-            st.error("В коде ГРНТИ только цифры")
-        if st.button("Применить", width="stretch", disabled=wrong):
-            st.session_state.filters = dict(chosen)
-            close_menu("filter_menu")
-        if st.button("Сбросить", width="stretch"):
-            st.session_state.filters = empty_filters()
-            st.session_state.filters_draft = empty_filters()
-            close_menu("filter_menu")
+        # два фильтра стоят рядом в рамках, иначе выпадайка не помещается в экран
+        left, right = st.columns(2, border=True)
+        with left:
+            st.caption("Группа вузов:")
+            for level in LEVELS:
+                rows = filter_vuz(vuz, LEVELS[:LEVELS.index(level)], chosen)
+                options = ["Все"] + sorted(rows[level].dropna().unique())
+                choice = st.selectbox(level, options, index=options.index(chosen[level]),
+                                      placeholder="Выберите опцию")
+                if choice != chosen[level]:
+                    pick_level(level, choice)
+                    st.rerun()
+        with right:
+            st.caption("Код ГРНТИ:")
+            columns = st.columns([3, 1, 3, 1, 3])
+            number = st.session_state.get("filter_menu", 0)
+            for index, part in enumerate(PARTS):
+                with columns[index * 2]:
+                    # номер тот же, что у выпадайки: после сброса поля создаются заново
+                    key = f"{part}_{number}"
+                    if key not in st.session_state:
+                        st.session_state[key] = chosen[part]
+                    chosen[part] = st.text_input(part, max_chars=2, placeholder="**", key=key,
+                                                 label_visibility="collapsed")
+            for index in [1, 3]:
+                with columns[index]:
+                    st.markdown("###### .")
+            # код ГРНТИ состоит из чисел, буквы и знаки в нем не нужны
+            wrong = any(not chosen[part].isdigit() for part in PARTS if chosen[part])
+            if wrong:
+                st.error("В коде ГРНТИ только цифры")
+        apply, reset = st.columns(2)
+        with apply:
+            if st.button("Применить", width="stretch", disabled=wrong):
+                st.session_state.filters = dict(chosen)
+                close_menu("filter_menu")
+        with reset:
+            if st.button("Сбросить", width="stretch"):
+                st.session_state.filters = empty_filters()
+                st.session_state.filters_draft = empty_filters()
+                close_menu("filter_menu")
 
 def grnti_parts():
     chosen = filters()
@@ -104,8 +110,17 @@ def grnti_like():
     tail = "".join("." + level.ljust(2, "_") for level in levels)
     return rubric + "%", tail + "%"
 
+def filters_list():
+    # условия фильтра с названиями уровней: в заголовке файла каждое со своей строки
+    chosen = filters()
+    parts = [f"{level}: {chosen[level]}" for level in LEVELS if chosen[level] != "Все"]
+    code = ".".join(part or "__" for part in grnti_parts()).rstrip("._")
+    if code:
+        parts.append("Код ГРНТИ: " + code)
+    return parts
+
 def filters_name():
-    # условия фильтра попадают в название файла
+    # те же условия покороче, они идут в название файла
     chosen = filters()
     parts = [chosen[level] for level in LEVELS if chosen[level] != "Все"]
     code = ".".join(part or "__" for part in grnti_parts()).rstrip("._")
