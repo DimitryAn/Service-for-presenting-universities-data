@@ -117,7 +117,10 @@ def filters_list():
     code = ".".join(part or "__" for part in grnti_parts()).rstrip("._")
     if code:
         parts.append("Код ГРНТИ: " + code)
-    return parts
+    # слово Фильтр стоит отдельной строкой перед условиями
+    if parts:
+        return ["Фильтр:"] + parts
+    return ["Фильтр отсутствует"]
 
 def filters_name():
     # те же условия покороче, они идут в название файла
