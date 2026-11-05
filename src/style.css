@@ -52,3 +52,18 @@ div[style*="--trigger-width"] {
 [data-testid="stButton"] button p {
     color: black;
 }
+
+/* ссылки в руководстве подчеркнуты, чтобы их было видно в тексте */
+[data-testid="stMarkdown"] a {
+    text-decoration: underline;
+}
+
+/* руководство длиннее экрана: блок ограничен окном и прокручивается */
+.st-key-help,
+[data-testid="stLayoutWrapper"]:has(.st-key-help),
+[data-testid="stVerticalBlock"]:has(.st-key-help) {
+    min-height: 0;
+}
+.st-key-help {
+    overflow-y: auto;
+}

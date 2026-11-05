@@ -3,7 +3,7 @@ from config import PROJECT_DIR
 from src.analysis import show_analysis_page
 from src.auth import auth
 from src.filters import show_filter_page
-from src.menu import show_help_page, show_exit_page
+from src.menu import show_help_page, show_help, show_exit_page
 from src.reports import show_report
 from src.sort import show_sort_page
 from src.summary import show_summary
@@ -61,5 +61,4 @@ elif page == "report":
     show_report(st.session_state.report)
 
 elif page == "help":
-    st.markdown("###### Помощь")
-    st.markdown("Инструкция по использованию сервиса.")
+    show_help()
